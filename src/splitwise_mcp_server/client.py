@@ -78,11 +78,35 @@ class SplitwiseClient:
     
     def _log_response(self, response: httpx.Response):
         """Log API response without exposing sensitive data.
-        
+
         Args:
             response: HTTP response object
         """
         logger.debug(f"API Response: {response.status_code}")
+
+    def _validate_write_response(self, data: Dict[str, Any]) -> None:
+        """Check Splitwise write-operation response for logical errors.
+
+        Splitwise returns 200 OK even for failed writes. Success is determined
+        by the response body: 'errors' must be empty, 'success' must be True.
+        """
+        errors = data.get("errors")
+        if errors:
+            if isinstance(errors, dict) and errors:
+                parts = []
+                for key, value in errors.items():
+                    if isinstance(value, list):
+                        parts.append(f"{key}: {', '.join(str(v) for v in value)}")
+                    else:
+                        parts.append(f"{key}: {value}")
+                raise Exception(f"Splitwise API error: {'; '.join(parts)}")
+            elif isinstance(errors, list) and errors:
+                raise Exception(f"Splitwise API error: {'; '.join(str(e) for e in errors)}")
+            elif isinstance(errors, str) and errors:
+                raise Exception(f"Splitwise API error: {errors}")
+
+        if "success" in data and data["success"] is not True:
+            raise Exception("Operation did not succeed. The resource may not exist or you may lack permission.")
     
     def handle_api_error(self, response: httpx.Response) -> MCPError:
         """Convert HTTP errors to structured MCP errors.
@@ -313,15 +337,17 @@ class SplitwiseClient:
                 # handle_api_error will raise RateLimitError for 429
                 error = self.handle_api_error(response)
                 raise Exception(f"{error.message} (Status: {error.status_code})")
-            
-            return response.json()
+
+            result = response.json()
+            self._validate_write_response(result)
+            return result
         except RateLimitError:
             # Re-raise rate limit errors without wrapping
             raise
         except httpx.RequestError as e:
             logger.error(f"Network error: {str(e)}")
             raise Exception(f"Network error: Could not connect to Splitwise API. Please check your internet connection.\nDetails: {str(e)}")
-    
+
     async def put(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make PUT request to Splitwise API.
         
