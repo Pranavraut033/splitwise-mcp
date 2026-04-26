@@ -76,6 +76,7 @@ async def lifespan(server: FastMCP) -> AsyncIterator[None]:
     
     # Initialize EntityResolver
     resolver = EntityResolver(client)
+    resolver.default_threshold = config.default_match_threshold
     logger.info("EntityResolver initialized")
     
     logger.info("Splitwise MCP Server started successfully")
@@ -639,17 +640,15 @@ def register_resolution_tools(mcp: FastMCP) -> None:
     """Register entity resolution MCP tools."""
     
     @mcp.tool()
-    async def resolve_friend(query: str, threshold: int = 70) -> List[Dict[str, Any]]:
+    async def resolve_friend(query: str, threshold: Optional[int] = None) -> List[Dict[str, Any]]:
         """Fuzzy-match a friend by name. Returns matches with id, name, and match_score.
         Use this when you know a name but not the user_id."""
         try:
-            # Validate query
             validate_required(query, "query")
-            
-            # Validate threshold range
-            validate_range(threshold, "threshold", min_val=0, max_val=100)
-            
-            matches = await resolver.resolve_friend(query, threshold)
+            effective_threshold = threshold if threshold is not None else resolver.default_threshold
+            validate_range(effective_threshold, "threshold", min_val=0, max_val=100)
+
+            matches = await resolver.resolve_friend(query, effective_threshold)
             result = [
                 {
                     "id": match.id,
@@ -668,17 +667,15 @@ def register_resolution_tools(mcp: FastMCP) -> None:
             raise
     
     @mcp.tool()
-    async def resolve_group(query: str, threshold: int = 70) -> List[Dict[str, Any]]:
+    async def resolve_group(query: str, threshold: Optional[int] = None) -> List[Dict[str, Any]]:
         """Fuzzy-match a group by name. Returns matches with id, name, and match_score.
         Use this when you know a group name but not the group_id."""
         try:
-            # Validate query
             validate_required(query, "query")
-            
-            # Validate threshold range
-            validate_range(threshold, "threshold", min_val=0, max_val=100)
-            
-            matches = await resolver.resolve_group(query, threshold)
+            effective_threshold = threshold if threshold is not None else resolver.default_threshold
+            validate_range(effective_threshold, "threshold", min_val=0, max_val=100)
+
+            matches = await resolver.resolve_group(query, effective_threshold)
             result = [
                 {
                     "id": match.id,
@@ -697,17 +694,15 @@ def register_resolution_tools(mcp: FastMCP) -> None:
             raise
     
     @mcp.tool()
-    async def resolve_category(query: str, threshold: int = 70) -> List[Dict[str, Any]]:
+    async def resolve_category(query: str, threshold: Optional[int] = None) -> List[Dict[str, Any]]:
         """Fuzzy-match an expense category by name (e.g. "food", "utilities").
         Returns matches with id, name, and match_score. Searches subcategories too."""
         try:
-            # Validate query
             validate_required(query, "query")
-            
-            # Validate threshold range
-            validate_range(threshold, "threshold", min_val=0, max_val=100)
-            
-            matches = await resolver.resolve_category(query, threshold)
+            effective_threshold = threshold if threshold is not None else resolver.default_threshold
+            validate_range(effective_threshold, "threshold", min_val=0, max_val=100)
+
+            matches = await resolver.resolve_category(query, effective_threshold)
             result = [
                 {
                     "id": match.id,
