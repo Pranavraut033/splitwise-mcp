@@ -202,83 +202,42 @@ def register_expense_tools(mcp: FastMCP) -> None:
         currency_code: str = "USD",
         date: Optional[str] = None,
         category_id: Optional[int] = None,
+        details: Optional[str] = None,
+        repeat_interval: Optional[str] = None,
         users: Optional[List[Dict[str, Any]]] = None,
         split_equally: bool = True
     ) -> Dict[str, Any]:
-        """Create a new expense in Splitwise.
-        
-        Creates a new expense with the specified details. The expense can be split
-        equally among users or with custom split amounts. If no date is provided,
-        the current date/time is used.
-        
-        IMPORTANT: For any calculations involving amounts, you MUST use the arithmetic
-        tools (add, subtract, multiply, divide, modulo) BEFORE calling this tool.
-        These tools ensure accurate calculations with proper rounding and handle
-        multiple inputs efficiently. Examples:
-        - Adding line items: add([12.50, 8.75, 15.00])
-        - Applying tax: multiply([100, 1.08])
-        - Splitting bills: divide([120, 4])
-        - Calculating tips: multiply([85, 1.18]) then divide by people
-        
-        Args:
-            cost: Total amount as string with 2 decimal places (e.g., "25.50")
-            description: Short description of the expense
-            group_id: Group ID for group expenses (default: 0 for non-group expense)
-            currency_code: Three-letter currency code (default: "USD")
-            date: ISO 8601 datetime string (default: current date/time)
-            category_id: Category ID from get_categories (optional)
-            users: List of user split information with user_id, paid_share, owed_share (optional)
-            split_equally: Whether to split the expense equally among users (default: True)
-            
-        Returns:
-            Dictionary containing created expense information including:
-            - id: Expense ID
-            - description: Expense description
-            - cost: Total cost
-            - date: Expense date
-            - users: List of users involved in the split
-            
-        Raises:
-            ValidationError: If input validation fails
-            RateLimitError: If rate limit is exceeded
-            Exception: If API request fails
+        """Create a new expense. Cost is a string with 2 decimals (e.g. "25.50").
+        Splits equally by default; provide users list with paid_share/owed_share for custom splits.
+        Each user needs user_id or (email + first_name + last_name).
+        Set repeat_interval to "weekly", "fortnightly", "monthly", or "yearly" for recurring expenses.
         """
         try:
-            # Validate required parameters
             validate_required(cost, "cost")
             validate_required(description, "description")
-            
-            # Validate cost is a positive number
             validate_positive_number(cost, "cost")
-            
-            # Validate currency code format
             validate_currency_code(currency_code)
-            
-            # Validate date format if provided
+
             if date:
                 validate_date_format(date, "date")
-            
-            # Validate group_id is non-negative
             if group_id < 0:
                 raise ValidationError(
                     "group_id must be non-negative (use 0 for non-group expenses)",
                     field="group_id",
                     details={"value": group_id}
                 )
-            
-            # Validate category_id is positive if provided
             if category_id is not None and category_id <= 0:
                 raise ValidationError(
                     "category_id must be a positive integer",
                     field="category_id",
                     details={"value": category_id}
                 )
-            
-            # Validate users list if provided
+            if repeat_interval is not None:
+                valid_intervals = ["never", "weekly", "fortnightly", "monthly", "yearly"]
+                validate_choice(repeat_interval, "repeat_interval", valid_intervals)
             if users:
                 validate_user_split(users)
-            
-            # Build expense data
+
             expense_data = {
                 "cost": cost,
                 "description": description,
@@ -286,14 +245,12 @@ def register_expense_tools(mcp: FastMCP) -> None:
                 "group_id": group_id,
             }
 
-            # Auto-detect: custom splits override split_equally
             if users:
                 expense_data["split_equally"] = False
                 expense_data["users"] = users
             elif split_equally:
                 expense_data["split_equally"] = True
 
-            # Add optional parameters
             if date:
                 expense_data["date"] = date
             else:
@@ -301,12 +258,15 @@ def register_expense_tools(mcp: FastMCP) -> None:
 
             if category_id is not None:
                 expense_data["category_id"] = category_id
-            
+            if details is not None:
+                expense_data["details"] = details
+            if repeat_interval is not None:
+                expense_data["repeat_interval"] = repeat_interval
+
             result = await client.create_expense(expense_data)
             logger.info(f"Created expense: {description} (${cost})")
             return result
         except (ValidationError, RateLimitError):
-            # Re-raise validation and rate limit errors without wrapping
             raise
         except Exception as e:
             logger.error(f"Error creating expense: {e}")
@@ -420,31 +380,16 @@ def register_expense_tools(mcp: FastMCP) -> None:
         description: Optional[str] = None,
         date: Optional[str] = None,
         category_id: Optional[int] = None,
+        currency_code: Optional[str] = None,
+        group_id: Optional[int] = None,
+        details: Optional[str] = None,
+        repeat_interval: Optional[str] = None,
         users: Optional[List[Dict[str, Any]]] = None
     ) -> Dict[str, Any]:
-        """Update an existing expense.
-        
-        Updates one or more fields of an existing expense. Only provided fields
-        will be updated; other fields remain unchanged.
-        
-        Args:
-            expense_id: The ID of the expense to update
-            cost: New total amount as string (optional)
-            description: New description (optional)
-            date: New date in ISO 8601 format (optional)
-            category_id: New category ID (optional)
-            users: Updated user split information (optional)
-            
-        Returns:
-            Dictionary containing updated expense information
-            
-        Raises:
-            ValidationError: If input validation fails
-            RateLimitError: If rate limit is exceeded
-            Exception: If expense not found or API request fails
+        """Update an existing expense. Only provided fields are changed.
+        If any users are supplied, all shares for the expense are overwritten with the provided values.
         """
         try:
-            # Validate expense_id
             validate_required(expense_id, "expense_id")
             if expense_id <= 0:
                 raise ValidationError(
@@ -452,28 +397,30 @@ def register_expense_tools(mcp: FastMCP) -> None:
                     field="expense_id",
                     details={"value": expense_id}
                 )
-            
-            # Validate cost if provided
             if cost is not None:
                 validate_positive_number(cost, "cost")
-            
-            # Validate date format if provided
             if date is not None:
                 validate_date_format(date, "date")
-            
-            # Validate category_id if provided
             if category_id is not None and category_id <= 0:
                 raise ValidationError(
                     "category_id must be a positive integer",
                     field="category_id",
                     details={"value": category_id}
                 )
-            
-            # Validate users list if provided
+            if currency_code is not None:
+                validate_currency_code(currency_code)
+            if group_id is not None and group_id < 0:
+                raise ValidationError(
+                    "group_id must be non-negative",
+                    field="group_id",
+                    details={"value": group_id}
+                )
+            if repeat_interval is not None:
+                valid_intervals = ["never", "weekly", "fortnightly", "monthly", "yearly"]
+                validate_choice(repeat_interval, "repeat_interval", valid_intervals)
             if users is not None:
                 validate_user_split(users)
-            
-            # Build update data with only provided fields
+
             expense_data = {}
             if cost is not None:
                 expense_data["cost"] = cost
@@ -483,15 +430,23 @@ def register_expense_tools(mcp: FastMCP) -> None:
                 expense_data["date"] = date
             if category_id is not None:
                 expense_data["category_id"] = category_id
+            if currency_code is not None:
+                expense_data["currency_code"] = currency_code
+            if group_id is not None:
+                expense_data["group_id"] = group_id
+            if details is not None:
+                expense_data["details"] = details
+            if repeat_interval is not None:
+                expense_data["repeat_interval"] = repeat_interval
             if users is not None:
                 expense_data["users"] = users
-            
+
             if not expense_data:
                 raise ValidationError(
                     "At least one field must be provided to update",
                     details={"provided_fields": []}
                 )
-            
+
             result = await client.update_expense(expense_id, expense_data)
             logger.info(f"Updated expense {expense_id}")
             return result
