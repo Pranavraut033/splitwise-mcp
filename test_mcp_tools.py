@@ -1,55 +1,61 @@
 #!/usr/bin/env python
-"""Test script for Splitwise MCP Server tools."""
+"""Manual live smoke test for Splitwise MCP Server tools.
+
+Requires real Splitwise credentials in .env (see SETUP.md) -- this hits the
+live API, unlike tests/ which use httpx.MockTransport and run in CI. Not
+part of the pytest suite; run directly:
+
+    python test_mcp_tools.py
+"""
 
 import asyncio
-from splitwise_mcp_server.server import mcp
+from fastmcp import Client
+from splitwise_mcp_server.server import create_server
+
 
 async def test_tools():
-    """Test various MCP tools."""
+    """Call a handful of read-only tools through a real in-process client."""
     print("=" * 70)
-    print("Testing Splitwise MCP Server Tools")
+    print("Testing Splitwise MCP Server Tools (live API)")
     print("=" * 70)
     print()
-    
-    # Test 1: Get current user
-    print("1. Testing get-current-user tool...")
-    result = await mcp.call_tool("get-current-user", {})
-    print(f"   ✓ Success: {result[:100]}...")
-    print()
-    
-    # Test 2: Get friends
-    print("2. Testing get-friends tool...")
-    result = await mcp.call_tool("get-friends", {})
-    print(f"   ✓ Success: Found friends data")
-    print()
-    
-    # Test 3: Get groups
-    print("3. Testing get-groups tool...")
-    result = await mcp.call_tool("get-groups", {})
-    print(f"   ✓ Success: Found groups data")
-    print()
-    
-    # Test 4: Get categories
-    print("4. Testing get-categories tool...")
-    result = await mcp.call_tool("get-categories", {})
-    print(f"   ✓ Success: Found categories data")
-    print()
-    
-    # Test 5: Get currencies
-    print("5. Testing get-currencies tool...")
-    result = await mcp.call_tool("get-currencies", {})
-    print(f"   ✓ Success: Found currencies data")
-    print()
-    
-    # Test 6: Resolve category (fuzzy matching)
-    print("6. Testing resolve-category tool (fuzzy matching)...")
-    result = await mcp.call_tool("resolve-category", {"query": "food"})
-    print(f"   ✓ Success: {result[:100]}...")
-    print()
-    
+
+    server = create_server()
+    async with Client(server) as client:
+        print("1. Testing get_current_user tool...")
+        result = await client.call_tool("get_current_user", {})
+        print(f"   Success: user id={result.data.get('user', {}).get('id')}")
+        print()
+
+        print("2. Testing get_friends tool...")
+        result = await client.call_tool("get_friends", {})
+        print(f"   Success: {len(result.data.get('friends', []))} friends")
+        print()
+
+        print("3. Testing get_groups tool...")
+        result = await client.call_tool("get_groups", {})
+        print(f"   Success: {len(result.data.get('groups', []))} groups")
+        print()
+
+        print("4. Testing get_categories tool...")
+        result = await client.call_tool("get_categories", {})
+        print(f"   Success: {len(result.data.get('categories', []))} categories")
+        print()
+
+        print("5. Testing get_currencies tool...")
+        result = await client.call_tool("get_currencies", {})
+        print(f"   Success: {len(result.data.get('currencies', []))} currencies")
+        print()
+
+        print("6. Testing resolve_category tool (fuzzy matching)...")
+        result = await client.call_tool("resolve_category", {"query": "food"})
+        print(f"   Success: {len(result.data)} matches")
+        print()
+
     print("=" * 70)
-    print("✓ All MCP tool tests passed!")
+    print("All MCP tool smoke tests passed!")
     print("=" * 70)
+
 
 if __name__ == "__main__":
     asyncio.run(test_tools())
