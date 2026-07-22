@@ -195,44 +195,50 @@ Once configured, Kiro will automatically start the MCP server when needed. You c
 
 ## Available Tools
 
-The server provides 20+ MCP tools organized into categories:
+The server provides 27 MCP tools organized into categories:
 
 ### User Tools
-- `get-current-user` - Get authenticated user information
-- `get-user` - Get information about a specific user
+- `get_current_user` - Get authenticated user information
+- `get_user` - Get information about a specific user
 
 ### Expense Tools
-- `create-expense` - Create a new expense with splits
-- `get-expenses` - List expenses with filters
-- `get-expense` - Get detailed expense information
-- `update-expense` - Update an existing expense
-- `delete-expense` - Delete an expense
+- `create_expense` - Create a new expense with splits
+- `get_expenses` - List expenses with filters
+- `get_expense` - Get detailed expense information
+- `update_expense` - Update an existing expense
+- `delete_expense` - Delete an expense
+- `restore_expense` - Restore a previously deleted expense
 
 ### Group Tools
-- `get-groups` - List all groups
-- `get-group` - Get detailed group information
-- `create-group` - Create a new group
-- `delete-group` - Delete a group
-- `add-user-to-group` - Add a user to a group
-- `remove-user-from-group` - Remove a user from a group
+- `get_groups` - List all groups
+- `get_group` - Get detailed group information
+- `create_group` - Create a new group
+- `delete_group` - Delete a group
+- `add_user_to_group` - Add a user to a group
+- `remove_user_from_group` - Remove a user from a group
 
 ### Friend Tools
-- `get-friends` - List all friends
-- `get-friend` - Get detailed friend information
+- `get_friends` - List all friends
+- `get_friend` - Get detailed friend information
+- `create_friend` - Add a friend by email address
+- `delete_friend` - Remove a friendship
 
 ### Resolution Tools (Fuzzy Matching)
-- `resolve-friend` - Match friend names to user IDs
-- `resolve-group` - Match group names to group IDs
-- `resolve-category` - Match category names to category IDs
+- `resolve_friend` - Match friend names to user IDs
+- `resolve_group` - Match group names to group IDs
+- `resolve_category` - Match category names to category IDs
 
 ### Comment Tools
-- `create-comment` - Add a comment to an expense
-- `get-comments` - Get all comments for an expense
-- `delete-comment` - Delete a comment
+- `create_comment` - Add a comment to an expense
+- `get_comments` - Get all comments for an expense
+- `delete_comment` - Delete a comment
+
+### Notification Tools
+- `get_notifications` - Get recent notifications for the current user
 
 ### Utility Tools
-- `get-categories` - Get all expense categories
-- `get-currencies` - Get all supported currencies
+- `get_categories` - Get all expense categories
+- `get_currencies` - Get all supported currencies
 
 See [TOOLS.md](TOOLS.md) for detailed documentation of each tool.
 
