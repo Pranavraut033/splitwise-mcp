@@ -1,6 +1,9 @@
 # Splitwise MCP Server
 
-A Model Context Protocol (MCP) server for [Splitwise](https://www.splitwise.com/), enabling AI agents to manage expenses, groups, and friends with natural language.
+A Model Context Protocol (MCP) server that connects [Splitwise](https://www.splitwise.com/) to Claude Desktop, Kiro, and other MCP clients, so an AI agent can manage your expenses, groups, and friends in plain language.
+
+![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 
 ## Features
 
@@ -9,17 +12,20 @@ A Model Context Protocol (MCP) server for [Splitwise](https://www.splitwise.com/
 - **Dual Auth**: Supports both OAuth 2.0 (recommended) and API Keys.
 - **Smart Caching**: Optimizes performance for static data like categories and currencies.
 
+## Prerequisites
+
+- Python 3.10+
+- A Splitwise account and, for OAuth, a [registered Splitwise app](https://secure.splitwise.com/apps)
+
 ## Installation
 
 ```bash
-# From PyPI (when published)
-pip install splitwise-mcp-server
-
-# From Source
-git clone https://github.com/tarunn2799/splitwise-mcp-server
-cd splitwise-mcp-server
+git clone https://github.com/tarunn2799/splitwise-mcp
+cd splitwise-mcp
 pip install -e .
 ```
+
+Not yet published to PyPI — install from source as above.
 
 ## Configuration
 
@@ -71,57 +77,25 @@ The server enables natural language interactions with your Splitwise data.
 
 ## Tools
 
-See [TOOLS.md](TOOLS.md) for detailed documentation.
+27 tools across 8 categories. See [TOOLS.md](TOOLS.md) for full parameter/response documentation of each.
 
-### User Tools
-- `get_current_user`: Get authenticated user information
-- `get_user`: Get information about a specific user
-
-### Expense Tools
-- `create_expense`: Create a new expense with splits
-- `get_expenses`: List expenses with optional filters
-- `get_expense`: Get detailed expense information
-- `update_expense`: Update an existing expense
-- `delete_expense`: Delete an expense
-- `restore_expense`: Restore a previously deleted expense
-
-### Group Tools
-- `get_groups`: List all groups
-- `get_group`: Get detailed group information
-- `create_group`: Create a new group
-- `delete_group`: Delete a group
-- `add_user_to_group`: Add a user to a group
-- `remove_user_from_group`: Remove a user from a group
-
-### Friend Tools
-- `get_friends`: List all friends
-- `get_friend`: Get detailed friend information
-- `create_friend`: Add a friend by email address
-- `delete_friend`: Remove a friendship
-
-### Resolution Tools
-- `resolve_friend`: Fuzzy match friend names to user IDs
-- `resolve_group`: Fuzzy match group names to group IDs
-- `resolve_category`: Fuzzy match category names to category IDs
-
-### Comment Tools
-- `create_comment`: Add a comment to an expense
-- `get_comments`: Get all comments for an expense
-- `delete_comment`: Delete a comment
-
-### Notification Tools
-- `get_notifications`: Get recent notifications for the current user
-
-### Utility Tools
-- `get_categories`: Get all expense categories
-- `get_currencies`: Get all supported currencies
+| Category | Tools |
+|---|---|
+| User | `get_current_user`, `get_user` |
+| Expense | `create_expense`, `get_expenses`, `get_expense`, `update_expense`, `delete_expense`, `restore_expense` |
+| Group | `get_groups`, `get_group`, `create_group`, `delete_group`, `add_user_to_group`, `remove_user_from_group` |
+| Friend | `get_friends`, `get_friend`, `create_friend`, `delete_friend` |
+| Resolution (fuzzy matching) | `resolve_friend`, `resolve_group`, `resolve_category` |
+| Comment | `create_comment`, `get_comments`, `delete_comment` |
+| Notification | `get_notifications` |
+| Utility | `get_categories`, `get_currencies` |
 
 ## Development
 
 ```bash
 # Setup
-git clone https://github.com/tarunn2799/splitwise-mcp-server
-cd splitwise-mcp-server
+git clone https://github.com/tarunn2799/splitwise-mcp
+cd splitwise-mcp
 python -m venv venv
 source venv/bin/activate
 pip install -e ".[dev]"
@@ -129,6 +103,22 @@ pip install -e ".[dev]"
 # Test
 pytest
 ```
+
+## Deployment
+
+By default the server runs over stdio, for local MCP clients like Claude Desktop or Kiro. It can also run over HTTP for remote hosting (e.g. Prefect Horizon):
+
+```bash
+# Set FASTMCP_TRANSPORT=http, or pass --http
+FASTMCP_TRANSPORT=http python -m splitwise_mcp_server
+# Optional: FASTMCP_HOST (default 0.0.0.0), FASTMCP_PORT (default 8000)
+```
+
+`app.py` exposes a module-level `mcp` instance (`app.py:mcp`) as the entrypoint for platforms that expect one, configured via `fastmcp.json`.
+
+## Contributing
+
+Issues and pull requests are welcome against this fork.
 
 ## License
 
