@@ -74,48 +74,47 @@ The server enables natural language interactions with your Splitwise data.
 See [TOOLS.md](TOOLS.md) for detailed documentation.
 
 ### User Tools
-- `get-current-user`: Get authenticated user information
-- `get-user`: Get information about a specific user
+- `get_current_user`: Get authenticated user information
+- `get_user`: Get information about a specific user
 
 ### Expense Tools
-- `create-expense`: Create a new expense with splits
-- `get-expenses`: List expenses with optional filters
-- `get-expense`: Get detailed expense information
-- `update-expense`: Update an existing expense
-- `delete-expense`: Delete an expense
+- `create_expense`: Create a new expense with splits
+- `get_expenses`: List expenses with optional filters
+- `get_expense`: Get detailed expense information
+- `update_expense`: Update an existing expense
+- `delete_expense`: Delete an expense
+- `restore_expense`: Restore a previously deleted expense
 
 ### Group Tools
-- `get-groups`: List all groups
-- `get-group`: Get detailed group information
-- `create-group`: Create a new group
-- `delete-group`: Delete a group
-- `add-user-to-group`: Add a user to a group
-- `remove-user-from-group`: Remove a user from a group
+- `get_groups`: List all groups
+- `get_group`: Get detailed group information
+- `create_group`: Create a new group
+- `delete_group`: Delete a group
+- `add_user_to_group`: Add a user to a group
+- `remove_user_from_group`: Remove a user from a group
 
 ### Friend Tools
-- `get-friends`: List all friends
-- `get-friend`: Get detailed friend information
+- `get_friends`: List all friends
+- `get_friend`: Get detailed friend information
+- `create_friend`: Add a friend by email address
+- `delete_friend`: Remove a friendship
 
 ### Resolution Tools
-- `resolve-friend`: Fuzzy match friend names to user IDs
-- `resolve-group`: Fuzzy match group names to group IDs
-- `resolve-category`: Fuzzy match category names to category IDs
+- `resolve_friend`: Fuzzy match friend names to user IDs
+- `resolve_group`: Fuzzy match group names to group IDs
+- `resolve_category`: Fuzzy match category names to category IDs
 
 ### Comment Tools
-- `create-comment`: Add a comment to an expense
-- `get-comments`: Get all comments for an expense
-- `delete-comment`: Delete a comment
+- `create_comment`: Add a comment to an expense
+- `get_comments`: Get all comments for an expense
+- `delete_comment`: Delete a comment
+
+### Notification Tools
+- `get_notifications`: Get recent notifications for the current user
 
 ### Utility Tools
-- `get-categories`: Get all expense categories
-- `get-currencies`: Get all supported currencies
-
-### Arithmetic Tools
-- `add`: Add multiple numbers
-- `subtract`: Subtract numbers
-- `multiply`: Multiply numbers
-- `divide`: Divide numbers
-- `modulo`: Calculate remainder
+- `get_categories`: Get all expense categories
+- `get_currencies`: Get all supported currencies
 
 ## Development
 

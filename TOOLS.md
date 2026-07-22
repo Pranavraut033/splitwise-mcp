@@ -2,18 +2,6 @@
 
 This document provides comprehensive documentation for all MCP tools provided by the Splitwise MCP Server.
 
-## Important: Using Arithmetic Tools
-
-**When performing any expense calculations, you MUST use the [Arithmetic Tools](#arithmetic-tools) to ensure accuracy:**
-
-- **Adding amounts**: Use `add` to sum line items, calculate totals with tax/tip
-- **Subtracting amounts**: Use `subtract` for discounts, change, or adjustments
-- **Multiplying amounts**: Use `multiply` for quantities, tax rates, or scaling
-- **Dividing amounts**: Use `divide` to split bills, calculate per-person costs
-- **Checking remainders**: Use `modulo` to verify even splits or calculate remainders
-
-These tools handle proper rounding and decimal precision, preventing floating-point errors that could lead to incorrect expense amounts. Always verify the splits with the total amount to see if it adds up. 
-
 ## Table of Contents
 
 - [User Tools](#user-tools)
@@ -22,8 +10,8 @@ These tools handle proper rounding and decimal precision, preventing floating-po
 - [Friend Tools](#friend-tools)
 - [Resolution Tools](#resolution-tools)
 - [Comment Tools](#comment-tools)
+- [Notification Tools](#notification-tools)
 - [Utility Tools](#utility-tools)
-- [Arithmetic Tools](#arithmetic-tools)
 - [Error Codes](#error-codes)
 - [Common Patterns](#common-patterns)
 
@@ -31,7 +19,7 @@ These tools handle proper rounding and decimal precision, preventing floating-po
 
 ## User Tools
 
-### get-current-user
+### get_current_user
 
 Get information about the currently authenticated user.
 
@@ -68,7 +56,7 @@ Get information about the currently authenticated user.
 
 ---
 
-### get-user
+### get_user
 
 Get information about a specific user by ID.
 
@@ -107,11 +95,9 @@ Get information about a specific user by ID.
 
 ## Expense Tools
 
-### create-expense
+### create_expense
 
 Create a new expense in Splitwise.
-
-**IMPORTANT:** When creating expenses that involve calculations (tips, splits, percentages, currency conversion), you should use the [Arithmetic Tools](#arithmetic-tools) first to ensure accurate calculations with proper rounding, then use the calculated values in this tool.
 
 **Parameters:**
 | Name | Type | Required | Default | Description |
@@ -121,7 +107,7 @@ Create a new expense in Splitwise.
 | `group_id` | integer | No | 0 | Group ID (0 for non-group expense) |
 | `currency_code` | string | No | "USD" | Three-letter currency code |
 | `date` | string | No | current | ISO 8601 datetime string |
-| `category_id` | integer | No | null | Category ID from get-categories |
+| `category_id` | integer | No | null | Category ID from get_categories |
 | `users` | array | No | null | List of user split information |
 | `split_equally` | boolean | No | true | Whether to split equally among users |
 
@@ -178,7 +164,7 @@ Create a new expense in Splitwise.
 
 ---
 
-### get-expenses
+### get_expenses
 
 Get list of expenses with optional filters.
 
@@ -223,7 +209,7 @@ Get list of expenses with optional filters.
 
 ---
 
-### get-expense
+### get_expense
 
 Get detailed information about a specific expense.
 
@@ -261,7 +247,7 @@ Get detailed information about a specific expense.
 
 ---
 
-### update-expense
+### update_expense
 
 Update an existing expense.
 
@@ -300,7 +286,7 @@ Update an existing expense.
 
 ---
 
-### delete-expense
+### delete_expense
 
 Delete an expense permanently.
 
@@ -327,9 +313,35 @@ Delete an expense permanently.
 
 ---
 
+### restore_expense
+
+Restore a previously deleted expense. Use this to undo an accidental deletion.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `expense_id` | integer | Yes | The ID of the expense to restore |
+
+**Returns:**
+```json
+{
+  "success": true
+}
+```
+
+**Example Usage:**
+```
+"Undo that last delete, restore expense 987654"
+```
+
+**Errors:**
+- `404`: Expense not found
+
+---
+
 ## Group Tools
 
-### get-groups
+### get_groups
 
 Get all groups for the current user.
 
@@ -369,7 +381,7 @@ Get all groups for the current user.
 
 ---
 
-### get-group
+### get_group
 
 Get detailed information about a specific group.
 
@@ -408,7 +420,7 @@ Get detailed information about a specific group.
 
 ---
 
-### create-group
+### create_group
 
 Create a new group.
 
@@ -444,7 +456,7 @@ Create a new group.
 
 ---
 
-### delete-group
+### delete_group
 
 Delete a group permanently.
 
@@ -471,7 +483,7 @@ Delete a group permanently.
 
 ---
 
-### add-user-to-group
+### add_user_to_group
 
 Add a user to a group.
 
@@ -506,7 +518,7 @@ Add a user to a group.
 
 ---
 
-### remove-user-from-group
+### remove_user_from_group
 
 Remove a user from a group.
 
@@ -536,7 +548,7 @@ Remove a user from a group.
 
 ## Friend Tools
 
-### get-friends
+### get_friends
 
 Get all friends for the current user.
 
@@ -575,7 +587,7 @@ Get all friends for the current user.
 
 ---
 
-### get-friend
+### get_friend
 
 Get detailed information about a specific friend.
 
@@ -608,9 +620,69 @@ Get detailed information about a specific friend.
 
 ---
 
+### create_friend
+
+Add a friend by email address. Optionally provide their first and last name.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `user_email` | string | Yes | - | Email address of the friend to add |
+| `user_first_name` | string | No | "" | First name |
+| `user_last_name` | string | No | "" | Last name |
+
+**Returns:**
+```json
+{
+  "success": true,
+  "friend": {
+    "id": 67890,
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "email": "jane@example.com"
+  }
+}
+```
+
+**Example Usage:**
+```
+"Add jane@example.com as a friend"
+```
+
+**Errors:**
+- `400`: Invalid email address
+
+---
+
+### delete_friend
+
+Remove a friendship. Does not affect shared expenses or balances.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `friend_id` | integer | Yes | The ID of the friend to remove |
+
+**Returns:**
+```json
+{
+  "success": true
+}
+```
+
+**Example Usage:**
+```
+"Remove Jane from my friends list"
+```
+
+**Errors:**
+- `404`: Friend not found
+
+---
+
 ## Resolution Tools
 
-### resolve-friend
+### resolve_friend
 
 Resolve a natural language friend reference to user ID(s) using fuzzy matching.
 
@@ -650,7 +722,7 @@ Resolve a natural language friend reference to user ID(s) using fuzzy matching.
 
 ---
 
-### resolve-group
+### resolve_group
 
 Resolve a natural language group reference to group ID(s) using fuzzy matching.
 
@@ -683,7 +755,7 @@ Resolve a natural language group reference to group ID(s) using fuzzy matching.
 
 ---
 
-### resolve-category
+### resolve_category
 
 Resolve a natural language category reference to category ID(s) using fuzzy matching.
 
@@ -717,7 +789,7 @@ Resolve a natural language category reference to category ID(s) using fuzzy matc
 
 ## Comment Tools
 
-### create-comment
+### create_comment
 
 Create a comment on an expense.
 
@@ -753,7 +825,7 @@ Create a comment on an expense.
 
 ---
 
-### get-comments
+### get_comments
 
 Get all comments for an expense.
 
@@ -783,7 +855,7 @@ Get all comments for an expense.
 
 ---
 
-### delete-comment
+### delete_comment
 
 Delete a comment permanently.
 
@@ -810,9 +882,37 @@ Delete a comment permanently.
 
 ---
 
+## Notification Tools
+
+### get_notifications
+
+Get recent notifications for the current user (new expenses, payments, comments, group activity).
+
+**Parameters:** None
+
+**Returns:**
+```json
+{
+  "notifications": [
+    {
+      "id": 456,
+      "content": "John added an expense",
+      "created_at": "2024-01-15T14:30:00Z"
+    }
+  ]
+}
+```
+
+**Example Usage:**
+```
+"What's new on Splitwise?"
+```
+
+---
+
 ## Utility Tools
 
-### get-categories
+### get_categories
 
 Get all supported expense categories and subcategories.
 
@@ -854,7 +954,7 @@ Get all supported expense categories and subcategories.
 
 ---
 
-### get-currencies
+### get_currencies
 
 Get all supported currency codes.
 
@@ -886,94 +986,6 @@ Get all supported currency codes.
 ```
 
 **Note:** This data is cached for 24 hours to minimize API calls.
-
----
-
-## Arithmetic Tools
-
-Basic arithmetic operations for reliable expense calculations. These tools handle multiple inputs and proper decimal rounding.
-
-### add
-
-Add multiple numbers together.
-
-**Parameters:**
-- `numbers`: array[float] - List of numbers to add (minimum 1)
-- `decimal_places`: integer - Decimal places to round to (default: 2)
-
-**Returns:** `{ result, result_formatted, operands, operation }`
-
-**Examples:**
-- Add line items: `add([12.50, 8.75, 15.00])` → 36.25
-- Total with tax/tip: `add([85.00, 7.65, 15.30])` → 107.95
-
----
-
-### subtract
-
-Subtract numbers sequentially (left to right).
-
-**Parameters:**
-- `numbers`: array[float] - List of numbers to subtract (minimum 2)
-- `decimal_places`: integer - Decimal places to round to (default: 2)
-
-**Returns:** `{ result, result_formatted, operands, operation }`
-
-**Examples:**
-- Calculate change: `subtract([100.00, 87.50])` → 12.50
-- Apply discount: `subtract([50.00, 5.00])` → 45.00
-- Multiple deductions: `subtract([100.00, 10.00, 5.00, 2.50])` → 82.50
-
----
-
-### multiply
-
-Multiply multiple numbers together.
-
-**Parameters:**
-- `numbers`: array[float] - List of numbers to multiply (minimum 2)
-- `decimal_places`: integer - Decimal places to round to (default: 2)
-
-**Returns:** `{ result, result_formatted, operands, operation }`
-
-**Examples:**
-- Item total: `multiply([12.50, 3])` → 37.50 (price × quantity)
-- Apply tax: `multiply([100.00, 1.08])` → 108.00 (8% tax)
-- Tax + tip: `multiply([10.00, 1.08, 1.15])` → 12.42
-
----
-
-### divide
-
-Divide numbers sequentially (left to right).
-
-**Parameters:**
-- `numbers`: array[float] - List of numbers to divide (minimum 2)
-- `decimal_places`: integer - Decimal places to round to (default: 2)
-
-**Returns:** `{ result, result_formatted, operands, operation }`
-
-**Examples:**
-- Split bill: `divide([120.00, 4])` → 30.00 (total / people)
-- Unit price: `divide([45.00, 3])` → 15.00 (total / quantity)
-- Multiple divisions: `divide([100.00, 2, 5])` → 10.00
-
----
-
-### modulo
-
-Calculate remainder of division.
-
-**Parameters:**
-- `a`: float - Dividend
-- `b`: float - Divisor
-- `decimal_places`: integer - Decimal places to round to (default: 2)
-
-**Returns:** `{ result, result_formatted, operands, operation }`
-
-**Examples:**
-- Check remainder: `modulo(100.00, 3)` → 1.00
-- Verify even split: `modulo(120.00, 4)` → 0.00 (divides evenly)
 
 ---
 
@@ -1077,16 +1089,16 @@ All tools may return the following error types:
 
 ```
 1. "Create a $45 expense for dinner with Sarah"
-   → Uses resolve-friend to find Sarah's user_id
-   → Uses create-expense with split_equally=true
+   → Uses resolve_friend to find Sarah's user_id
+   → Uses create_expense with split_equally=true
 ```
 
 ### Creating a Group Expense
 
 ```
 1. "Create a $120 expense for groceries in my Roommates group"
-   → Uses resolve-group to find group_id
-   → Uses create-expense with the group_id
+   → Uses resolve_group to find group_id
+   → Uses create_expense with the group_id
    → Automatically splits among all group members
 ```
 
@@ -1094,78 +1106,56 @@ All tools may return the following error types:
 
 ```
 1. "Show me my recent expenses"
-   → Uses get-expenses with dated_after filter
+   → Uses get_expenses with dated_after filter
 2. "Update expense 987654 to $60"
-   → Uses update-expense with new cost
+   → Uses update_expense with new cost
 ```
 
 ### Working with Categories
 
 ```
 1. "What categories are available?"
-   → Uses get-categories
+   → Uses get_categories
 2. "Create a $30 food expense"
-   → Uses resolve-category to find "Food and drink" category_id
-   → Uses create-expense with the category_id
+   → Uses resolve_category to find "Food and drink" category_id
+   → Uses create_expense with the category_id
 ```
 
 ### Managing Groups
 
 ```
 1. "Create a trip group called 'Paris 2024'"
-   → Uses create-group with group_type="trip"
+   → Uses create_group with group_type="trip"
 2. "Add Mike to the Paris 2024 group"
-   → Uses resolve-group to find group_id
-   → Uses resolve-friend to find Mike's user_id
-   → Uses add-user-to-group
+   → Uses resolve_group to find group_id
+   → Uses resolve_friend to find Mike's user_id
+   → Uses add_user_to_group
 ```
 
 ### Natural Language Resolution
 
 ```
 1. "Find my friend jon" (typo)
-   → Uses resolve-friend with query="jon"
+   → Uses resolve_friend with query="jon"
    → Returns matches for "John Smith" with high score
 2. "Find group roomates" (typo)
-   → Uses resolve-group with query="roomates"
+   → Uses resolve_group with query="roomates"
    → Returns matches for "Roommates" with high score
-```
-
-### Using Arithmetic Tools for Expense Calculations
-
-```
-1. "Split $120 among 4 people"
-   → Uses divide(120, 4) to get 30 per person
-   → Uses create-expense with the calculated amounts
-
-2. "Calculate 15% tip on $85"
-   → Uses multiply(85, 0.15) to get tip amount
-   → Uses add(85, tip_amount) to get total
-   → Uses create-expense with the total
-
-3. "Add up expenses: $45.50, $32, $18.75"
-   → Uses add(45.50, 32) then add(result, 18.75)
-   → Uses create-expense with the total
-
-4. "What's each person's share if total is $150 and we split 60/40?"
-   → Uses multiply(150, 0.6) for first person
-   → Uses multiply(150, 0.4) for second person
-   → Uses create-expense with custom splits
 ```
 
 ---
 
 ## Best Practices
 
-1. **Use Resolution Tools**: When working with names instead of IDs, always use the resolution tools (resolve-friend, resolve-group, resolve-category) for accurate matching.
+1. **Use Resolution Tools**: When working with names instead of IDs, always use the resolution tools (resolve_friend, resolve_group, resolve_category) for accurate matching.
 
 2. **Handle Multiple Matches**: Resolution tools may return multiple matches. Present options to the user or use the highest-scoring match.
 
 3. **Cache Static Data**: Categories and currencies are automatically cached. Don't call these tools repeatedly.
 
-4. **Validate Before Creating**: Use get-categories and get-currencies to validate category IDs and currency codes before creating expenses.
+4. **Validate Before Creating**: Use get_categories and get_currencies to validate category IDs and currency codes before creating expenses.
 
-5. **Check Balances**: Before removing users from groups, verify their balance is zero using get-group.
+5. **Check Balances**: Before removing users from groups, verify their balance is zero using get_group.
 
 6. **Use Pagination**: When fetching large lists of expenses, use limit and offset parameters for pagination.
 
